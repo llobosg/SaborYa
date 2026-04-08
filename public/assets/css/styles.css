@@ -1,0 +1,373 @@
+/* public/assets/css/styles.css */
+
+:root {
+  /* Paleta de comida - Cálida y apetitosa */
+  --color-primary: #FF6B35;        /* Naranja vibrante (acción, apetito) */
+  --color-primary-dark: #E55A2B;
+  --color-secondary: #2ECC71;      /* Verde fresco (salud, ingredientes) */
+  --color-accent: #F7DC6F;         /* Amarillo suave (ofertas, alegría) */
+  
+  /* Neutros */
+  --color-bg: #FFF9F5;             /* Crema suave (fondo cálido) */
+  --color-surface: #FFFFFF;
+  --color-text-primary: #2C3E50;
+  --color-text-secondary: #7F8C8D;
+  --color-border: #E8E8E8;
+  
+  /* Estados */
+  --color-success: #27AE60;
+  --color-warning: #F39C12;
+  --color-error: #E74C3C;
+  --color-info: #3498DB;
+  
+  /* UI */
+  --border-radius: 12px;
+  --border-radius-lg: 20px;
+  --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+  
+  /* Tipografía */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.25rem;
+  --font-size-xl: 1.5rem;
+  
+  /* Espaciado */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  
+  /* Toast */
+  --toast-bg: rgba(44, 62, 80, 0.95);
+  --toast-text: #FFFFFF;
+  --toast-success: var(--color-success);
+  --toast-error: var(--color-error);
+}
+
+/* Reset base */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Header estático - Consumidor */
+.header-consumer {
+  position: sticky;
+  top: 0;
+  background: var(--color-surface);
+  padding: var(--spacing-md) var(--spacing-lg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--shadow-sm);
+  z-index: 100;
+}
+
+.header-consumer__logo {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-weight: 700;
+  font-size: var(--font-size-lg);
+  color: var(--color-primary);
+}
+
+.header-consumer__logo img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+
+/* Navegación inferior fija - Mobile */
+.nav-bottom {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--color-surface);
+  display: flex;
+  justify-content: space-around;
+  padding: var(--spacing-sm) 0;
+  border-top: 1px solid var(--color-border);
+  z-index: 100;
+}
+
+.nav-bottom__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  font-size: var(--font-size-sm);
+  padding: var(--spacing-xs);
+}
+
+.nav-bottom__item.active,
+.nav-bottom__item:hover {
+  color: var(--color-primary);
+}
+
+.nav-bottom__icon {
+  width: 24px;
+  height: 24px;
+}
+
+/* Chips de filtro */
+.filter-chips {
+  display: flex;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-lg);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.filter-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.filter-chip {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  font-size: var(--font-size-sm);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-chip.active,
+.filter-chip:hover {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+/* Grid de productos */
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-lg) calc(var(--spacing-xl) + 70px);
+}
+
+.product-card {
+  background: var(--color-surface);
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.product-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.product-card__image {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  background: var(--color-border);
+}
+
+.product-card__content {
+  padding: var(--spacing-md);
+}
+
+.product-card__name {
+  font-weight: 600;
+  margin-bottom: var(--spacing-xs);
+}
+
+.product-card__price {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+.product-card__price--original {
+  color: var(--color-text-secondary);
+  text-decoration: line-through;
+  font-size: var(--font-size-sm);
+}
+
+.product-card__price--current {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.product-card__badge {
+  position: absolute;
+  top: var(--spacing-sm);
+  right: var(--spacing-sm);
+  background: var(--color-accent);
+  color: var(--color-text-primary);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: 12px;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.product-card__add {
+  width: 100%;
+  padding: var(--spacing-sm);
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.product-card__add:hover {
+  background: var(--color-primary-dark);
+}
+
+/* Botón flotante de carrito */
+.cart-fab {
+  position: fixed;
+  bottom: 80px;
+  right: var(--spacing-lg);
+  background: var(--color-primary);
+  color: white;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-lg);
+  cursor: pointer;
+  z-index: 90;
+  transition: transform 0.2s;
+}
+
+.cart-fab:hover {
+  transform: scale(1.05);
+}
+
+.cart-fab__count {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--color-error);
+  color: white;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Toast notifications */
+.toast-container {
+  position: fixed;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  pointer-events: none;
+}
+
+.toast {
+  background: var(--toast-bg);
+  color: var(--toast-text);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  animation: toastSlideUp 0.3s ease, toastFadeOut 0.3s ease 2.7s forwards;
+  pointer-events: auto;
+  max-width: 90vw;
+}
+
+.toast--success {
+  border-left: 4px solid var(--toast-success);
+}
+
+.toast--error {
+  border-left: 4px solid var(--toast-error);
+}
+
+@keyframes toastSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes toastFadeOut {
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+/* Responsive Desktop para Admin */
+@media (min-width: 1024px) {
+  .nav-bottom {
+    display: none;
+  }
+  
+  .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    padding-bottom: var(--spacing-xl);
+  }
+  
+  .cart-fab {
+    display: none;
+  }
+}
+
+/* Animaciones amigables */
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.btn-pulse {
+  animation: pulse 2s infinite;
+}
+
+/* Accesibilidad */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
