@@ -1,4 +1,5 @@
-// public/assets/js/auth.js
+// public/assets/js/auth.js - Lógica de registro con UX mejorada
+
 document.addEventListener('DOMContentLoaded', () => {
     const step1Form = document.getElementById('step1-form');
     const step2Form = document.getElementById('step2-form');
@@ -6,42 +7,59 @@ document.addEventListener('DOMContentLoaded', () => {
     const verifyBtn = document.getElementById('verify-btn');
     const resendBtn = document.getElementById('resend-code');
     const resendTimer = document.getElementById('resend-timer');
-    const toastContainer = document.getElementById('toast-container');
     
     let currentEmail = '';
     let resendCountdown = 0;
     
-    // Paso 1: Enviar código
-    step1Form?.addEventListener('submit', async (e) => {
+    // ===== Paso 1: Enviar código =====
+    window.sendCode = async function(e) {
         e.preventDefault();
-        const email = document.getElementById('email').value.trim();
-        const csrfToken = step1Form.querySelector('[name="csrf_token"]').value;
         
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            showToast('Ingresa un email válido', 'error');
+        const email = document.getElementById('email').value.trim();
+        const csrfToken = document.querySelector('[name="csrf_token"]').value;
+        
+        if (!validateEmail(email)) {
+            showToast('Ingresa un email válido 📧', 'error');
+            document.getElementById('email').focus();
             return;
         }
         
+        // UI: Loading state
         setLoading(sendCodeBtn, true);
         
         try {
             const response = await fetch('/api/auth/send-code', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken},
-                body: JSON.stringify({email, csrf_token: csrfToken})
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': csrfToken
+                },
+                body: JSON.stringify({ email, csrf_token: csrfToken })
             });
+            
             const data = await response.json();
             
-            if (!response.ok) throw new Error(data.error || 'Error al enviar código');
+            if (!response.ok) {
+                throw new Error(data.error || data.message || 'Error al enviar código');
+            }
             
+            // Éxito: guardar email y mostrar paso 2
             currentEmail = email;
             document.getElementById('verify-email').value = email;
             document.getElementById('masked-email').textContent = data.email_masked;
             
-            step1Form.style.display = 'none';
-            step2Form.style.display = 'block';
+            // Transición animada entre pasos
+            step1Form.classList.add('hidden');
+            step2Form.classList.remove('hidden');
             
-            showToast('¡Código enviado! Revisa tu correo 📧', 'success');
+            showToast('¡Código enviado! Revisa tu correo ✨', 'success');
+            
+            // Auto-focus en input de código
+            setTimeout(() => {
+                document.getElementById('code')?.focus();
+            }, 300);
+            
+            // Iniciar countdown para reenvío
             startResendTimer(60);
             
         } catch (error) {
@@ -50,17 +68,19 @@ document.addEventListener('DOMContentLoaded', () => {
         } finally {
             setLoading(sendCodeBtn, false);
         }
-    });
+    };
     
-    // Paso 2: Verificar código
-    step2Form?.addEventListener('submit', async (e) => {
+    // ===== Paso 2: Verificar código =====
+    window.verifyCode = async function(e) {
         e.preventDefault();
+        
         const code = document.getElementById('code').value.trim();
         const name = document.getElementById('name').value.trim();
         const csrfToken = step2Form.querySelector('[name="csrf_token"]').value;
         
         if (!/^\d{6}$/.test(code)) {
-            showToast('Ingresa el código de 6 dígitos', 'error');
+            showToast('Ingresa el código de 6 dígitos 🔢', 'error');
+            document.getElementById('code').focus();
             return;
         }
         
@@ -69,111 +89,195 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch('/api/auth/verify-code', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken},
-                body: JSON.stringify({email: currentEmail, code, name: name || null, csrf_token: csrfToken})
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': csrfToken
+                },
+                body: JSON.stringify({
+                    email: currentEmail,
+                    code,
+                    name: name || null,
+                    csrf_token: csrfToken
+                })
             });
+            
             const data = await response.json();
             
-            if (!response.ok) throw new Error(data.error || 'Código inválido');
+            if (!response.ok) {
+                throw new Error(data.error || data.message || 'Código inválido');
+            }
             
-            showToast('¡Bienvenido a SaborYa! 🍕', 'success');
-            setTimeout(() => { window.location.href = data.redirect || '/home'; }, 1500);
+            showToast('¡Bienvenido a SaborYa! 🍕✨', 'success');
+            
+            // Redirect con breve delay para mostrar toast
+            setTimeout(() => {
+                window.location.href = data.redirect || '/home';
+            }, 1500);
             
         } catch (error) {
-            console.error('Verify error:', error);
+            console.error('Verify code error:', error);
             showToast(error.message, 'error');
-            document.getElementById('code').focus();
-            document.getElementById('code').select();
+            // Enfocar y seleccionar código para reintentar rápido
+            const codeInput = document.getElementById('code');
+            codeInput?.focus();
+            codeInput?.select();
         } finally {
             setLoading(verifyBtn, false);
         }
-    });
+    };
     
-    // Reenviar código
+    // ===== Reenviar código =====
     resendBtn?.addEventListener('click', async () => {
         if (resendCountdown > 0) return;
+        
         const csrfToken = step2Form.querySelector('[name="csrf_token"]').value;
+        
         setLoading(resendBtn, true);
+        resendBtn.disabled = true;
         
         try {
             const response = await fetch('/api/auth/send-code', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken},
-                body: JSON.stringify({email: currentEmail, csrf_token: csrfToken})
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': csrfToken
+                },
+                body: JSON.stringify({ email: currentEmail, csrf_token: csrfToken })
             });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.error || 'Error al reenviar');
             
-            showToast('Nuevo código enviado 📧', 'success');
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.error || 'Error al reenviar');
+            }
+            
+            showToast('Nuevo código enviado 📧✨', 'success');
             startResendTimer(60);
+            
         } catch (error) {
             showToast(error.message, 'error');
         } finally {
             setLoading(resendBtn, false);
+            resendBtn.disabled = false;
         }
     });
     
-    // Helpers
+    // ===== Helpers =====
+    
+    function validateEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+    
     function setLoading(button, loading) {
         if (!button) return;
         const text = button.querySelector('.btn-text');
         const loader = button.querySelector('.btn-loading');
+        
         if (loading) {
             button.disabled = true;
-            text.style.display = 'none';
-            loader.style.display = 'inline';
+            if (text) text.style.display = 'none';
+            if (loader) loader.style.display = 'inline-flex';
         } else {
             button.disabled = false;
-            text.style.display = 'inline';
-            loader.style.display = 'none';
+            if (text) text.style.display = 'inline';
+            if (loader) loader.style.display = 'none';
         }
     }
     
     function startResendTimer(seconds) {
         resendCountdown = seconds;
         resendBtn.style.display = 'none';
-        resendTimer.style.display = 'inline';
+        resendTimer.style.display = 'block';
         
-        const update = () => {
+        const updateTimer = () => {
             if (resendCountdown <= 0) {
                 resendTimer.style.display = 'none';
                 resendBtn.style.display = 'inline';
                 return;
             }
+            
             const mins = Math.floor(resendCountdown / 60);
             const secs = resendCountdown % 60;
             resendTimer.textContent = `Reenviar en ${mins}:${secs.toString().padStart(2, '0')}`;
+            
             resendCountdown--;
-            setTimeout(update, 1000);
+            setTimeout(updateTimer, 1000);
         };
-        update();
+        
+        updateTimer();
     }
     
     function showToast(message, type = 'info') {
+        const toastContainer = document.getElementById('toast-container');
         if (!toastContainer) return;
+        
         const toast = document.createElement('div');
         toast.className = `toast toast--${type}`;
-        toast.innerHTML = `<span>${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}</span><span>${message}</span>`;
+        
+        const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
+        
+        toast.innerHTML = `
+            <span class="toast-icon">${icon}</span>
+            <span class="toast-message">${message}</span>
+        `;
+        
         toastContainer.appendChild(toast);
+        
+        // Auto-remover después de 3.5 segundos
         setTimeout(() => {
             toast.style.opacity = '0';
             toast.style.transform = 'translateY(-10px)';
             setTimeout(() => toast.remove(), 300);
-        }, 4000);
+        }, 3500);
     }
     
-    // UX mejoras
+    // ===== UX Mejoras para Mobile =====
+    
+    // Auto-focus inicial
     document.getElementById('email')?.focus();
+    
+    // Auto-advance en código de 6 dígitos
     const codeInput = document.getElementById('code');
     codeInput?.addEventListener('input', (e) => {
+        // Solo permitir números
         e.target.value = e.target.value.replace(/[^0-9]/g, '');
-        if (e.target.value.length === 6) step2Form.requestSubmit();
+        
+        // Auto-submit si completa 6 dígitos
+        if (e.target.value.length === 6) {
+            // Pequeño delay para feedback visual
+            setTimeout(() => step2Form.requestSubmit(), 200);
+        }
     });
+    
+    // Permitir pegar código completo
     codeInput?.addEventListener('paste', (e) => {
         e.preventDefault();
         const pasted = (e.clipboardData || window.clipboardData).getData('text');
         const digits = pasted.replace(/[^0-9]/g, '').slice(0, 6);
         codeInput.value = digits;
-        if (digits.length === 6) step2Form.requestSubmit();
+        if (digits.length === 6) {
+            setTimeout(() => step2Form.requestSubmit(), 200);
+        }
     });
+    
+    // Prevenir zoom en iOS al enfocar inputs
+    document.querySelectorAll('input').forEach(input => {
+        input.addEventListener('focus', function() {
+            if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+                const viewport = document.querySelector('meta[name="viewport"]');
+                viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+            }
+        });
+        input.addEventListener('blur', function() {
+            if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+                const viewport = document.querySelector('meta[name="viewport"]');
+                viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes');
+            }
+        });
+    });
+    
+    // Soporte para teclado numérico en código
+    codeInput?.setAttribute('inputmode', 'numeric');
+    codeInput?.setAttribute('pattern', '[0-9]{6}');
+    codeInput?.setAttribute('autocomplete', 'one-time-code');
 });
