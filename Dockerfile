@@ -1,7 +1,7 @@
+# Dockerfile - Versión corregida para Railway
 FROM php:8.2-cli
 
-# 1. Instalar dependencias del sistema (Librerías de Linux)
-# Esto soluciona los errores de 'libcurl', 'oniguruma' (para mbstring), y 'jpeg/freetype' (para gd)
+# 1. Instalar dependencias del sistema
 RUN apt-get update && apt-get install -y \
     libcurl4-openssl-dev \
     libonig-dev \
@@ -11,28 +11,43 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip \
     git \
+    ca-certificates \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. Instalar extensiones de PHP
-# Nota: En PHP 8.2+, usamos --with-jpeg en lugar de --with-jplg si está disponible, 
-# pero a veces es mejor instalar solo lo esencial si GD no es crítica al inicio.
-# Aquí instalamos pdo, pdo_mysql, curl y mbstring (las críticas para tu app).
-# GD se intenta configurar, pero si falla, el resto de la app seguirá funcionando.
-RUN docker-php-ext-install pdo pdo_mysql curl mbstring
+# 2. Instalar extensiones PHP esenciales
+RUN docker-php-ext-install -j$(nproc) pdo pdo_mysql curl mbstring
 
-# Opcional: Intentar instalar GD solo si es estrictamente necesario para imágenes
-# Si da error, comenta las siguientes 3 líneas, tu app de vuelos no necesita generar imágenes por ahora.
+# 3. GD opcional (no falla el build si no compila)
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg && \
-    docker-php-ext-install gd || echo "GD installation skipped or failed, continuing..."
+    docker-php-ext-install gd || true
 
-# 3. Configurar directorio de trabajo
+# 4. Directorio de trabajo
 WORKDIR /app
 
-# 4. Copiar archivos del proyecto
+# 5. Copiar composer.json primero para aprovechar cache de capas
+COPY composer.json composer.lock* ./
+RUN if [ -f composer.lock ]; then \
+        composer install --no-dev --no-interaction --optimize-autoloader; \
+    else \
+        composer install --no-dev --no-interaction --optimize-autoloader; \
+    fi
+
+# 6. Copiar el resto del proyecto
 COPY . .
 
-# 5. Exponer el puerto
-EXPOSE 8000
+# 7. Permisos para logs y uploads
+RUN mkdir -p logs uploads/products uploads/receipts && \
+    chmod -R 775 logs uploads
 
-# 6. Comando de inicio
-CMD ["sh", "-c", "php -S 0.0.0.0:${PORT:-8000} -t public"]
+# 8. HEALTHCHECK nativo de Docker (Railway lo respeta)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
+
+# 9. ENTRYPOINT script para manejo robusto de PORT
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+ENTRYPOINT ["docker-entrypoint.sh"]
+
+# 10. CMD por defecto (se pasa al entrypoint)
+CMD ["php", "-S", "0.0.0.0:8000", "-t", "public"]
