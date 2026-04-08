@@ -1,81 +1,76 @@
 <?php
-// public/login.php - Formulario de login (render)
-require_once __DIR__ . '/../config/config.php';
+// public/api/auth/login.php
 
-// Si ya está logueado, redirigir según rol
-if (!empty($_SESSION['user_id'])) {
-    $role = $_SESSION['user_role'] ?? 'consumer';
-    redirect($role === 'admin' ? '/admin' : '/home');
+require_once __DIR__ . '/../../../config/config.php';
+
+header('Content-Type: application/json');
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    exit;
 }
-?>
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iniciar Sesión - <?= h(APP_NAME) ?></title>
-    <link rel="stylesheet" href="/assets/css/styles.css">
-    <link rel="manifest" href="/manifest.json">
-</head>
-<body class="login-page">
-    <div class="login-container">
-        <div class="login-card">
-            <div class="login-header">
-                <img src="/assets/images/logo.svg" alt="<?= h(APP_NAME) ?>" class="login-logo">
-                <h1>¡Bienvenido de vuelta! 👋</h1>
-                <p>Ingresa para continuar con tu pedido</p>
-            </div>
-            
-            <?php if (!empty($_GET['error'])): ?>
-                <div class="toast toast--error" role="alert">
-                    <span>❌</span>
-                    <span><?= h($_GET['error'] === 'invalid' ? 'Credenciales incorrectas' : 'Ha ocurrido un error') ?></span>
-                </div>
-            <?php endif; ?>
-            
-            <form action="/api/auth/login" method="POST" class="login-form" id="loginForm">
-                <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
-                
-                <div class="form-group">
-                    <label for="email">Correo electrónico</label>
-                    <input type="email" id="email" name="email" required 
-                           placeholder="tu@email.com" autocomplete="email">
-                </div>
-                
-                <div class="form-group">
-                    <label for="password">Contraseña</label>
-                    <input type="password" id="password" name="password" required 
-                           placeholder="••••••••" autocomplete="current-password">
-                    <button type="button" class="toggle-password" aria-label="Mostrar contraseña">👁️</button>
-                </div>
-                
-                <div class="form-options">
-                    <label class="checkbox">
-                        <input type="checkbox" name="remember">
-                        <span>Recordarme</span>
-                    </label>
-                    <a href="/recuperar-password" class="link-forgot">¿Olvidaste tu contraseña?</a>
-                </div>
-                
-                <button type="submit" class="btn btn-primary btn-block">
-                    Iniciar Sesión
-                </button>
-            </form>
-            
-            <div class="login-footer">
-                <p>¿No tienes cuenta? <a href="/registro.php" class="link-register">Regístrate aquí</a></p>
-            </div>
-        </div>
-    </div>
-    
-    <script src="/assets/js/app.js"></script>
-    <script>
-        // Toggle password visibility
-        document.querySelector('.toggle-password')?.addEventListener('click', function() {
-            const input = document.getElementById('password');
-            input.type = input.type === 'password' ? 'text' : 'password';
-            this.textContent = input.type === 'password' ? '👁️' : '🙈';
-        });
-    </script>
-</body>
-</html>
+
+if (!verify_csrf($_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '')) {
+    http_response_code(403);
+    echo json_encode(['error' => 'CSRF token invalid']);
+    exit;
+}
+
+$email = filter_var(trim($_POST['email'] ?? ''), FILTER_VALIDATE_EMAIL);
+$password = $_POST['password'] ?? '';
+
+if (!$email || strlen($password) < 6) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Credenciales inválidas']);
+    exit;
+}
+
+// Rate limiting por IP
+$ip = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'];
+$rateKey = "login:ip:{$ip}";
+if (\Saborya\Utils\RateLimiter::isLimited($rateKey, 5, 900)) {
+    http_response_code(429);
+    echo json_encode(['error' => 'Demasiados intentos. Intenta en 15 minutos']);
+    exit;
+}
+
+// Consultar usuario
+$pdo = getPDO();
+$stmt = $pdo->prepare("SELECT id, name, email, password_hash, role, verified_at FROM users WHERE email = ? LIMIT 1");
+$stmt->execute([$email]);
+$user = $stmt->fetch();
+
+if (!$user || !password_verify($password, $user['password_hash'])) {
+    \Saborya\Utils\RateLimiter::isLimited($rateKey, 5, 900); // Registrar intento fallido
+    http_response_code(401);
+    echo json_encode(['error' => 'Credenciales incorrectas']);
+    exit;
+}
+
+if (!$user['verified_at']) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Confirma tu email para continuar']);
+    exit;
+}
+
+// Login exitoso
+session_regenerate_id(true);
+$_SESSION['user_id'] = $user['id'];
+$_SESSION['user_name'] = $user['name'];
+$_SESSION['user_email'] = $user['email'];
+$_SESSION['user_role'] = $user['role'];
+$_SESSION['last_activity'] = time();
+
+\Saborya\Utils\RateLimiter::clear($rateKey);
+log_audit($user['id'], 'login_success', 'users', $user['id'], $ip);
+
+$redirect = $user['role'] === 'admin' ? '/admin' : '/home';
+echo json_encode(['success' => true, 'redirect' => $redirect, 'user' => ['name' => $user['name'], 'role' => $user['role']]]);
+
+function log_audit($userId, $action, $table, $recordId, $ip) {
+    try {
+        $pdo = getPDO();
+        $stmt = $pdo->prepare("INSERT INTO audit_logs (user_id, action, table_name, record_id, ip_address) VALUES (?, ?, ?, ?, ?)");
+        $stmt->execute([$userId, $action, $table, $recordId, $ip]);
+    } catch (Exception $e) { error_log("Audit: " . $e->getMessage()); }
+}
