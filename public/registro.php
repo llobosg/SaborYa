@@ -2,6 +2,12 @@
 // public/registro.php - Registro con layout mobile/PWA estilo SaborYa
 require_once __DIR__ . '/../config/config.php';
 
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+$csrfToken = csrf_token();  // Esto usa $_SESSION
+
 // Si ya está logueado, redirigir
 if (!empty($_SESSION['user_id'])) {
     redirect($_SESSION['user_role'] === 'admin' ? '/admin' : '/home');
@@ -25,6 +31,7 @@ if (!empty($_SESSION['user_id'])) {
 </head>
 <body>
     <div class="app-container">
+        <input type="hidden" name="csrf_token" value="<?= h($csrfToken) ?>">
         
         <!-- Logo Header -->
         <div class="logo-header">
