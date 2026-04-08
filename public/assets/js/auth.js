@@ -32,8 +32,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-Token': csrfToken
+                    'X-CSRF-Token': csrfToken  // ← Mantener este header también
                 },
+                credentials: 'include',  // ✅ AGREGAR ESTA LÍNEA (envía cookies de sesión)
                 body: JSON.stringify({ email, csrf_token: csrfToken })
             });
             
@@ -93,6 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     'Content-Type': 'application/json',
                     'X-CSRF-Token': csrfToken
                 },
+                credentials: 'include',  // ✅ AGREGAR
                 body: JSON.stringify({
                     email: currentEmail,
                     code,
@@ -142,6 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     'Content-Type': 'application/json',
                     'X-CSRF-Token': csrfToken
                 },
+                credentials: 'include',  // ✅ AGREGAR
                 body: JSON.stringify({ email: currentEmail, csrf_token: csrfToken })
             });
             

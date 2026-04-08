@@ -64,6 +64,23 @@ if (APP_ENV === 'development') {
     ini_set('error_log', __DIR__ . '/../logs/php-errors.log');
 }
 
+// Configurar cookies de sesión para funcionar en subrutas (/api/, /assets/, etc.)
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// ✅ Mejorar configuración de cookies para PWA/API
+if (APP_ENV === 'production') {
+    ini_set('session.cookie_samesite', 'Lax');  // Permitir cookies en fetch con credentials
+    ini_set('session.cookie_secure', '1');      // Solo HTTPS en producción
+    ini_set('session.cookie_httponly', '1');    // Prevenir acceso JS a la cookie
+} else {
+    // En desarrollo local, permitir cookies sin HTTPS
+    ini_set('session.cookie_samesite', 'Lax');
+    ini_set('session.cookie_secure', '0');
+    ini_set('session.cookie_httponly', '1');
+}
+
 // === FUNCIONES DE SEGURIDAD ===
 function h($string) {
     return htmlspecialchars($string ?? '', ENT_QUOTES | ENT_HTML5, 'UTF-8');
