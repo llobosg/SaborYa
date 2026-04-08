@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setLoading(sendCodeBtn, true);
         
         try {
-            const response = await fetch('/api/auth/send-code', {
+            const response = await fetch('/api/auth/send-code.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setLoading(verifyBtn, true);
         
         try {
-            const response = await fetch('/api/auth/verify-code', {
+            const response = await fetch('/api/auth/verify-code.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
         resendBtn.disabled = true;
         
         try {
-            const response = await fetch('/api/auth/send-code', {
+            const response = await fetch('/api/auth/send-code.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
