@@ -3,14 +3,12 @@ builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
 
 [deploy]
-# El healthcheck ahora usa el nativo de Docker + endpoint /health
-startCommand = ""  # ← Dejar vacío, el ENTRYPOINT lo maneja
-healthcheckPath = "/health"
-healthcheckTimeout = 100
+startCommand = ""
+healthcheckPath = "/health.php"  # ← CON .php (crítico)
+healthcheckTimeout = 30          # ← Reducido: 30s es suficiente
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
 
-# Variables por defecto (Railway las sobrescribe en producción)
 [deploy.envs]
 PORT = "8000"
 PUBLIC_DIR = "public"
