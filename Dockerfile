@@ -62,4 +62,4 @@ ENTRYPOINT ["docker-entrypoint.sh"]
 
 # 12. CMD vacío o placeholder (el entrypoint lo ignora para el puerto)
 #     Lo dejamos por compatibilidad con Docker, pero no afecta la ejecución
-CMD ["php-server"]
+CMD ["php", "-S", "0.0.0.0:8000", "-t", "public", "router.php"]
