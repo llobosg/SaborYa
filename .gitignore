@@ -6,6 +6,8 @@
 # Archivos de sistema
 .DS_Store
 Thumbs.db
+config/.env
+config/*.local.php
 
 # Logs y caché
 *.log

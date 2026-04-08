@@ -1,16 +1,34 @@
 <?php
-// public/index.php - Entry point único
+// public/index.php - Entry point con validación de config
 
 // 1. Iniciar sesión segura
 if (session_status() === PHP_SESSION_NONE) {
     ini_set('session.cookie_httponly', 1);
-    ini_set('session.cookie_secure', 1); // En producción con HTTPS
+    ini_set('session.cookie_secure', 1);
     ini_set('session.use_only_cookies', 1);
     session_start();
 }
 
-// 2. Cargar configuración (fuera de public)
-require_once __DIR__ . '/../config/config.php';
+// 2. Cargar configuración con validación robusta
+$configPath = realpath(__DIR__ . '/../config/config.php');
+if (!$configPath || !file_exists($configPath)) {
+    $configPath = __DIR__ . '/../config/config.php';
+}
+if (!file_exists($configPath)) {
+    // Log de error para debug en Railway
+    error_log("CONFIG ERROR: config.php not found at " . __DIR__ . '/../config/config.php');
+    
+    http_response_code(500);
+    header('Content-Type: application/json');
+    echo json_encode([
+        'error' => 'Configuration error',
+        'details' => getenv('APP_ENV') === 'development' 
+            ? 'config.php not found at: ' . $configPath 
+            : 'Service temporarily unavailable'
+    ]);
+    exit;
+}
+require_once $configPath;
 
 // 3. Middleware de autenticación básico
 function requireAuth($role = null) {
