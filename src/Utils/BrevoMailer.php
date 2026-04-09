@@ -10,8 +10,8 @@ class BrevoMailer {
     
     public function __construct() {
         $this->apiKey = defined('BREVO_API_KEY') ? BREVO_API_KEY : '';
-        $this->fromEmail = defined('BREVO_FROM_EMAIL') ? BREVO_FROM_EMAIL : 'no-reply@saborya.app';
-        $this->fromName = defined('BREVO_FROM_NAME') ? BREVO_FROM_NAME : 'SaborYa';
+        $this->fromEmail = defined('BREVO_FROM_EMAIL') ? BREVO_FROM_EMAIL : 'llobos@gltcomex.com';
+        $this->fromName = defined('BREVO_FROM_NAME') ? BREVO_FROM_NAME : 'SaborYa!';
         
         if (empty($this->apiKey)) {
             error_log('BrevoMailer: BREVO_API_KEY no configurada');
@@ -62,7 +62,7 @@ class BrevoMailer {
     <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto">
         <tr>
             <td style="background:{$primaryColor};padding:24px;text-align:center">
-                <h1 style="color:white;margin:0;font-size:24px">🍽️ SaborYa</h1>
+                <h1 style="color:white;margin:0;font-size:24px">🍽️ SaborYa!</h1>
                 <p style="color:rgba(255,255,255,0.9);margin:8px 0 0">Alimentos preparados, delivered con amor</p>
             </td>
         </tr>
@@ -70,7 +70,7 @@ class BrevoMailer {
             <td style="padding:32px 24px">
                 <h2 style="color:#2C3E50;margin:0 0 16px">¡Hola, {$userName}! 👋</h2>
                 <p style="color:#555;line-height:1.6;margin:0 0 24px">
-                    Gracias por registrarte en SaborYa. Para completar tu cuenta y comenzar a pedir, 
+                    Gracias por registrarte en SaborYa! Para completar tu cuenta y comenzar a pedir, 
                     por favor verifica tu correo con el siguiente código:
                 </p>
                 <div style="background:#F8F9FA;border:2px dashed {$primaryColor};border-radius:12px;padding:20px;text-align:center;margin:24px 0">
@@ -83,7 +83,7 @@ class BrevoMailer {
                 <p style="margin:0 0 16px">
                     <a href="{$appUrl}/registro.php?verified=1" 
                        style="display:inline-block;background:{$primaryColor};color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">
-                        Ir a SaborYa →
+                        Ir a SaborYa! →
                     </a>
                 </p>
                 <p style="color:#999;font-size:12px;margin:0">
@@ -93,7 +93,7 @@ class BrevoMailer {
         </tr>
         <tr>
             <td style="background:#F8F9FA;padding:16px 24px;text-align:center;font-size:12px;color:#666">
-                <p style="margin:0 0 8px">© 2026 SaborYa • Hecho con 🍕 en Chile</p>
+                <p style="margin:0 0 8px">© 2026 SaborYa • Hecho con 🍕 en Chile • Powered by gltcomex.com </p>
             </td>
         </tr>
     </table>
