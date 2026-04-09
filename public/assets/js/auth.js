@@ -247,9 +247,30 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Auto-submit si completa 6 dígitos
         if (e.target.value.length === 6) {
-            // Pequeño delay para feedback visual
-            setTimeout(() => step2Form.requestSubmit(), 200);
+            setTimeout(() => {
+                // ✅ Método compatible: llamar directamente a la función window.verifyCode
+                if (typeof window.verifyCode === 'function') {
+                    const fakeEvent = { preventDefault: () => {} };
+                    window.verifyCode(fakeEvent);
+                }
+            }, 200);
         }
+
+        // Permitir pegar código completo
+        codeInput?.addEventListener('paste', (e) => {
+            e.preventDefault();
+            const pasted = (e.clipboardData || window.clipboardData).getData('text');
+            const digits = pasted.replace(/[^0-9]/g, '').slice(0, 6);
+            codeInput.value = digits;
+            if (digits.length === 6) {
+                setTimeout(() => {
+                    if (typeof window.verifyCode === 'function') {
+                        const fakeEvent = { preventDefault: () => {} };
+                        window.verifyCode(fakeEvent);
+                    }
+                }, 200);
+            }
+        });
     });
     
     // Permitir pegar código completo
