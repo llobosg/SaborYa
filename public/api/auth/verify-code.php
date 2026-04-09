@@ -3,6 +3,12 @@
 
 require_once __DIR__ . '/../../../config/config.php';
 
+$input = json_decode(file_get_contents('php://input'), true);
+
+$email = filter_var(trim($input['email'] ?? ''), FILTER_VALIDATE_EMAIL);
+$code = preg_replace('/[^0-9]/', '', $input['code'] ?? '');
+$name = sanitize_input($input['name'] ?? '');
+
 header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

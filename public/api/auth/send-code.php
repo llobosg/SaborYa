@@ -5,6 +5,25 @@ require_once __DIR__ . '/../../../config/config.php';
 require_once __DIR__ . '/../../../src/Utils/BrevoMailer.php';
 require_once __DIR__ . '/../../../src/Utils/RateLimiter.php';
 
+// ✅ Parsear cuerpo JSON (porque fetch con application/json no llena $_POST)
+$input = json_decode(file_get_contents('php://input'), true);
+
+// CSRF: verificar desde JSON o headers
+$csrfToken = $input['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+if (!verify_csrf($csrfToken)) {
+    http_response_code(403);
+    echo json_encode(['error' => 'CSRF token invalid']);
+    exit;
+}
+
+// ✅ Validar email desde JSON parseado
+$email = filter_var(trim($input['email'] ?? ''), FILTER_VALIDATE_EMAIL);
+if (!$email) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Email inválido', 'received' => $input['email'] ?? 'empty']);
+    exit;
+}
+
 use Saborya\Utils\BrevoMailer;
 use Saborya\Utils\RateLimiter;
 

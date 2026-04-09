@@ -54,6 +54,11 @@ body {
         radial-gradient(ellipse at top, rgba(255, 107, 53, 0.15) 0%, transparent 50%),
         radial-gradient(ellipse at bottom, rgba(46, 204, 113, 0.1) 0%, transparent 50%),
         url('/assets/images/backgrounds/food-pattern.jpg');
+    
+    /* Fallback si la imagen falla */
+    background-color: #0f172a;
+    
+    /* Prevenir que un 404 de imagen rompa el layout */
     background-repeat: no-repeat;
     background-position: center;
     background-size: cover;
