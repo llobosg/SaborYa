@@ -55,11 +55,10 @@ RUN mkdir -p logs uploads/products uploads/receipts && \
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
 
-# 11. ENTRYPOINT robusto (el script construye el comando con $PORT)
+# 11. ENTRYPOINT para manejo robusto de PORT
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 ENTRYPOINT ["docker-entrypoint.sh"]
 
-# 12. CMD vacío o placeholder (el entrypoint lo ignora para el puerto)
-#     Lo dejamos por compatibilidad con Docker, pero no afecta la ejecución
+# 12. ✅ CMD con router.php para manejar rutas limpias
 CMD ["php", "-S", "0.0.0.0:8000", "-t", "public", "router.php"]

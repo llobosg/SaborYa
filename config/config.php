@@ -134,7 +134,6 @@ function getPDO() {
     }
     return $pdo;
 }
-
 // ============================================
 // 🪵 LOGGING PARA DEBUG (solo en desarrollo)
 // ============================================
