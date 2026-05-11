@@ -93,20 +93,37 @@ function consumer_history() {
 // ============================================
 // ✅ HANDLERS DE ADMIN (placeholders)
 // ============================================
-
+// ===== HANDLERS DE ADMIN (agregar junto a consumer_*) =====
 function admin_dashboard() {
+    // Verificar autenticación y rol
+    if (empty($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'admin' || !($_SESSION['is_active'] ?? true)) {
+        redirect('/login.php?error=unauthorized');
+    }
+    
+    // Actualizar last_login
+    if (!empty($_SESSION['user_id'])) {
+        try {
+            $pdo = getPDO();
+            $pdo->prepare("UPDATE users SET last_login_at = NOW() WHERE id = ?")
+                ->execute([$_SESSION['user_id']]);
+        } catch (Exception $e) { /* No fallar si el log falla */ }
+    }
+    
+    // Renderizar dashboard
+    include __DIR__ . '/../templates/admin/dashboard.php';
+}
+
+function admin_products() {
     if (empty($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'admin') {
         redirect('/login.php?error=unauthorized');
     }
-    echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Admin - SaborYa</title>';
-    echo '<link rel="stylesheet" href="/assets/css/styles.css"></head><body>';
-    echo '<div class="app-container"><div class="card auth-card" style="margin-top:20px">';
-    echo '<h2>👨‍🍳 Panel de Administración</h2>';
-    echo '<p style="color:var(--color-text-secondary);margin:16px 0">';
-    echo 'Bienvenido, administrador.<br>Funcionalidades en desarrollo.';
-    echo '</p>';
-    echo '<a href="/home" class="btn btn-primary btn-block">🔙 Volver al inicio</a>';
-    echo '</div></div></body></html>';
+    include __DIR__ . '/../templates/admin/products.php';
+}
+
+function admin_accept_invite() {
+    // Esta ruta se maneja directamente por public/admin/accept-invite.php
+    // Pero la registramos por si acaso
+    include __DIR__ . '/../public/admin/accept-invite.php';
 }
 
 function admin_kds_monitor() {
@@ -114,9 +131,7 @@ function admin_kds_monitor() {
     consumer_catalog(); // Reutilizar placeholder por ahora
 }
 
-function admin_products() {
-    consumer_catalog(); // Placeholder
-}
+
 
 function admin_send_campaign() {
     http_response_code(501);
@@ -196,6 +211,7 @@ $publicRoutes = [
     ['POST', '/api/auth/verify-code', 'verify_registration_code'],
     ['POST', '/api/auth/recover-password', 'request_password_recovery'],
     ['POST', '/api/auth/reset-password', 'reset_password'],
+    ['GET', '/admin/accept-invite.php', 'admin_accept_invite'],
 ];
 
 // Rutas consumidor (requieren auth)
