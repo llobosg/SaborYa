@@ -1,5 +1,5 @@
 <?php
-// public/index.php - Entry point CON LOGGING
+// public/index.php - Entry point
 
 // 🪵 Log request inicial
 error_log("INDEX_DEBUG: Starting index.php - URI={$_SERVER['REQUEST_URI']}, Method={$_SERVER['REQUEST_METHOD']}");
@@ -13,22 +13,33 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 error_log("INDEX_DEBUG: Session started - ID=" . session_id() . ", User ID=" . ($_SESSION['user_id'] ?? 'none'));
 
-// 2. Cargar configuración con validación robusta
+// 2. Cargar configuración
 $configPath = realpath(__DIR__ . '/../config/config.php');
 if (!$configPath || !file_exists($configPath)) {
     $configPath = __DIR__ . '/../config/config.php';
 }
 if (!file_exists($configPath)) {
-    error_log("INDEX_DEBUG: CONFIG ERROR - config.php not found at {$configPath}");
+    error_log("INDEX_DEBUG: CONFIG ERROR - config.php not found");
     http_response_code(500);
-    header('Content-Type: application/json');
     echo json_encode(['error' => 'Configuration error']);
     exit;
 }
 error_log("INDEX_DEBUG: Config loaded from {$configPath}");
 require_once $configPath;
 
-// ... resto del código igual ...
+// ✅ ============================================
+// ✅ FIX: Redirección para ruta raíz "/"
+// ✅ ============================================
+$requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+error_log("INDEX_DEBUG: Request path resolved to: {$requestUri}");
+
+if ($requestUri === '/' || $requestUri === '/index.php') {
+    error_log("INDEX_DEBUG: Root path detected - Redirecting to /registro.php");
+    
+    // Redirigir a registro como landing principal
+    header('Location: /registro.php', true, 302);
+    exit;  // ✅ IMPORTANTE: detener ejecución después de redirect
+}
 
 // 3. Middleware de autenticación básico
 function requireAuth($role = null) {
