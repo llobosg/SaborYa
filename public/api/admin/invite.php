@@ -1,5 +1,12 @@
 <?php
-// public/api/admin/invite.php - Crear invitación para nuevo admin
+<?php
+// 🔒 Bloquear cualquier acceso que no sea POST
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    header('Content-Type: application/json');
+    echo json_encode(['error' => 'Method not allowed. Use POST.']);
+    exit;
+}
 require_once __DIR__ . '/../../../config/config.php';
 
 header('Content-Type: application/json');

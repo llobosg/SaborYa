@@ -1,5 +1,5 @@
 <?php
-// templates/admin/dashboard.php - Panel principal de administración
+// templates/admin/dashboard.php - Panel principal de administración (CORREGIDO)
 if (empty($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'admin') {
     redirect('/login.php?error=unauthorized');
 }
@@ -25,7 +25,8 @@ $userName = $_SESSION['user_name'] ?? 'Admin';
         .stat-label { color: var(--color-text-secondary); font-size: 0.9rem; }
         .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
         @media (max-width: 768px) { .admin-layout { flex-direction: column; } .admin-sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding: 12px; } }
-        /* Fix: Toasts centrados y completos dentro del modal de invitación */
+        
+        /* Fix: Toasts centrados dentro del modal de invitación */
         #invite-result .toast {
             position: static !important;
             transform: none !important;
@@ -128,15 +129,18 @@ $userName = $_SESSION['user_name'] ?? 'Admin';
                 <p style="color:var(--color-text-secondary)">No hay actividad reciente. ¡Comienza agregando tu primer producto!</p>
             </div>
         </main>
-    </div>
-    <!-- ✅ INCLUSIÓN DEL MODAL (Usa __DIR__ para ruta segura) -->
+    </div> <!-- Fin admin-layout -->
+
+    <!-- ✅ INCLUSIÓN DEL MODAL (ANTES de </body>, ruta segura con verificación) -->
     <?php 
     $modalPath = __DIR__ . '/../components/admin-invite-modal.php';
     if (file_exists($modalPath)) {
         include $modalPath;
     } else {
-        echo "<!-- ERROR: Modal no encontrado en {$modalPath} -->";
+        // Fallback: incluir código inline si el archivo no existe (para debug)
+        echo '<script>console.warn("⚠️ Modal file not found: ' . $modalPath . '");</script>';
     }
     ?>
+
 </body>
 </html>

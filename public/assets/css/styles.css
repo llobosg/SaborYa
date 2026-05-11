@@ -492,3 +492,23 @@ input:-webkit-autofill:focus {
         transform: translateX(-50%);
     }
 }
+/* Fix: Toasts centrados dentro del modal de invitación */
+#invite-result .toast-container {
+    width: 100%;
+    position: relative !important;
+    transform: none !important;
+    left: auto !important;
+    bottom: auto !important;
+    margin-top: 16px;
+}
+#invite-result .toast {
+    position: relative !important;
+    transform: none !important;
+    width: 100%;
+    left: auto;
+    margin: 0 0 8px 0;
+    text-align: center;
+    justify-content: center;
+    box-sizing: border-box;
+    word-break: break-word;
+}
