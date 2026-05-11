@@ -1,4 +1,3 @@
-# Crear archivo public/manifest.json
 cat > public/manifest.json << 'EOF'
 {
   "name": "SaborYa",
