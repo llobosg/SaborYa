@@ -1,4 +1,3 @@
-cat > public/manifest.json << 'EOF'
 {
   "name": "SaborYa",
   "short_name": "SaborYa",
@@ -23,9 +22,3 @@ cat > public/manifest.json << 'EOF'
     }
   ]
 }
-EOF
-
-# Agregar a git
-git add public/manifest.json
-git commit -m "feat: add PWA manifest.json"
-git push origin main
