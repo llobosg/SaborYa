@@ -43,6 +43,23 @@ if (strlen($password) < 6) {
     exit;
 }
 
+$password = $input['password'] ?? '';
+$passwordConfirm = $input['password_confirm'] ?? '';
+
+// Validar que las contraseñas coincidan
+if ($password !== $passwordConfirm) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Las contraseñas no coinciden']);
+    exit;
+}
+
+// Validar longitud mínima
+if (strlen($password) < 6) {
+    http_response_code(400);
+    echo json_encode(['error' => 'La contraseña debe tener al menos 6 caracteres']);
+    exit;
+}
+
 try {
     $pdo = getPDO();
     

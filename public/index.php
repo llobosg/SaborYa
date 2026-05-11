@@ -153,6 +153,37 @@ function requireAuth($role = null) {
     }
 }
 
+// Agregar esta función junto a consumer_home, consumer_cart, etc.
+
+function consumer_catalogo() {
+    if (empty($_SESSION['user_id'])) { redirect('/registro.php'); }
+    
+    // Verificar si completó el perfil
+    if (empty($_SESSION['profile_completed'])) {
+        redirect('/home');
+    }
+    
+    // Renderizar template
+    $viewPath = __DIR__ . '/../templates/consumer/catalogo.php';
+    if (file_exists($viewPath)) {
+        include $viewPath;
+    } else {
+        // Fallback: mostrar placeholder
+        echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Catálogo - SaborYa</title>';
+        echo '<link rel="stylesheet" href="/assets/css/styles.css"></head><body>';
+        echo '<div class="app-container"><div class="card auth-card" style="margin-top:20px">';
+        echo '<h2>🍕 Catálogo en construcción</h2>';
+        echo '<p style="color:var(--color-text-secondary);margin:16px 0">';
+        echo 'Estamos preparando los mejores platos para ti.<br>';
+        echo 'Mientras tanto, revisa tu perfil o espera novedades.';
+        echo '</p>';
+        echo '<div style="display:flex;gap:10px;flex-wrap:wrap">';
+        echo '<a href="/home" class="btn btn-primary" style="flex:1">⚙️ Mi Perfil</a>';
+        echo '<a href="/carrito" class="btn" style="flex:1;background:rgba(255,255,255,0.1)">🛒 Carrito</a>';
+        echo '</div></div></div></body></html>';
+    }
+}
+
 // 4. Enrutador simple
 $request = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $method = $_SERVER['REQUEST_METHOD'];
@@ -170,7 +201,7 @@ $publicRoutes = [
 // Rutas consumidor (requieren auth)
 $consumerRoutes = [
     ['GET', '/home', 'consumer_home'],
-    ['GET', '/catalogo', 'consumer_catalog'],
+    ['GET', '/catalogo', 'consumer_catalogo'],
     ['GET', '/carrito', 'consumer_cart'],
     ['POST', '/api/cart/add', 'cart_add'],
     ['POST', '/api/cart/abandoned-check', 'cart_abandoned_check'],
