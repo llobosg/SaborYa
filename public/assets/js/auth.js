@@ -109,10 +109,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(data.error || data.message || 'Código inválido');
             }
 
-            showToast('¡Bienvenido a SaborYa! 🍕✨', 'success');
+            // Dentro de window.verifyCode(), después de recibir respuesta:
+            if (data.already_verified) {
+                showToast('✅ Ya estás verificado, redirigiendo...', 'success');
+            } else {
+                showToast('¡Bienvenido a SaborYa! 🍕✨', 'success');
+            }
 
             // ✅ Redirección inmediata + fallback
             const redirectUrl = data.redirect || '/home';
+
             // ✅ Reemplazar por console.log o eliminar
             console.log(`[SaborYa] Redirecting to: ${redirectUrl}`);
 
@@ -126,25 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 verifyBtn.disabled = true;
                 verifyBtn.querySelector('.btn-text').textContent = 'Redirigiendo...';
             }
-
-            // ✅ Redirect robusto con múltiples fallbacks
-            const redirectUrl = data.redirect || '/home';
-
-            // Método 1: Redirect inmediato
-            window.location.href = redirectUrl;
-
-            // Método 2: Fallback si el primero no funcionó
-            setTimeout(() => {
-                if (!window.location.href.includes(redirectUrl)) {
-                    window.location.replace(redirectUrl);
-                }
-            }, 2000);
-
-            // Método 3: Último recurso
-            setTimeout(() => {
-                window.location.assign(redirectUrl);
-            }, 4000);
-
+            
             // Método 1: Redirect inmediato
             window.location.href = redirectUrl;
 
