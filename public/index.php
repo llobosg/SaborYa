@@ -1,5 +1,8 @@
 <?php
-// public/index.php - Entry point con validación de config
+// public/index.php - Entry point CON LOGGING
+
+// 🪵 Log request inicial
+error_log("INDEX_DEBUG: Starting index.php - URI={$_SERVER['REQUEST_URI']}, Method={$_SERVER['REQUEST_METHOD']}");
 
 // 1. Iniciar sesión segura
 if (session_status() === PHP_SESSION_NONE) {
@@ -8,6 +11,7 @@ if (session_status() === PHP_SESSION_NONE) {
     ini_set('session.use_only_cookies', 1);
     session_start();
 }
+error_log("INDEX_DEBUG: Session started - ID=" . session_id() . ", User ID=" . ($_SESSION['user_id'] ?? 'none'));
 
 // 2. Cargar configuración con validación robusta
 $configPath = realpath(__DIR__ . '/../config/config.php');
@@ -15,20 +19,16 @@ if (!$configPath || !file_exists($configPath)) {
     $configPath = __DIR__ . '/../config/config.php';
 }
 if (!file_exists($configPath)) {
-    // Log de error para debug en Railway
-    error_log("CONFIG ERROR: config.php not found at " . __DIR__ . '/../config/config.php');
-    
+    error_log("INDEX_DEBUG: CONFIG ERROR - config.php not found at {$configPath}");
     http_response_code(500);
     header('Content-Type: application/json');
-    echo json_encode([
-        'error' => 'Configuration error',
-        'details' => getenv('APP_ENV') === 'development' 
-            ? 'config.php not found at: ' . $configPath 
-            : 'Service temporarily unavailable'
-    ]);
+    echo json_encode(['error' => 'Configuration error']);
     exit;
 }
+error_log("INDEX_DEBUG: Config loaded from {$configPath}");
 require_once $configPath;
+
+// ... resto del código igual ...
 
 // 3. Middleware de autenticación básico
 function requireAuth($role = null) {

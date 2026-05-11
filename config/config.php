@@ -134,3 +134,25 @@ function getPDO() {
     }
     return $pdo;
 }
+
+// ============================================
+// 🪵 LOGGING PARA DEBUG (solo en desarrollo)
+// ============================================
+if (APP_ENV === 'development') {
+    function debugLog($context, $data = null) {
+        $timestamp = date('Y-m-d H:i:s');
+        $message = "[{$timestamp}] [{$context}]";
+        if ($data !== null) {
+            $message .= ' ' . json_encode($data, JSON_UNESCAPED_UNICODE);
+        }
+        error_log("SABORYA_CONFIG: " . $message);
+    }
+    
+    // Log inicial cuando se carga config.php
+    debugLog('config_loaded', [
+        'APP_ENV' => APP_ENV,
+        'APP_URL' => APP_URL,
+        'session_id' => session_id(),
+        'request_uri' => $_SERVER['REQUEST_URI'] ?? 'not set'
+    ]);
+}
