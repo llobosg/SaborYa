@@ -121,7 +121,14 @@ window.sendInvite = async function(e) {
         }
         
         // Success
-        showInviteResult(`✅ Invitación enviada a ${data.email} (${data.expires_in})`, 'success');
+       if (navigator.clipboard && data.invite_link) {
+            navigator.clipboard.writeText(data.invite_link).then(() => {
+                showInviteResult('✅ Invitación enviada + enlace copiado al portapapeles 📋', 'success');
+            }).catch(() => {
+                // Fallback si no hay permisos de clipboard
+                showInviteResult(`✅ Invitación enviada a ${data.email}`, 'success');
+            });
+        }
         form.reset();
         
         // Auto-close after 3 seconds
