@@ -27,48 +27,45 @@ if (!file_exists($configPath)) {
 error_log("INDEX_DEBUG: Config loaded from {$configPath}");
 require_once $configPath;
 
-// Después de cargar config.php, antes del enrutador principal:
-
 // ============================================
 // ✅ RUTAS DE CONSUMIDOR - HANDLERS SIMPLES
 // ============================================
 
-// Handler para /home (onboarding o redirect)
 function consumer_home() {
     // Si ya completó el perfil, redirect a catálogo
     if (!empty($_SESSION['profile_completed'])) {
         redirect('/catalogo');
     }
     // Si no, mostrar onboarding
-    include __DIR__ . '/../templates/consumer/home.php';
+    $viewPath = __DIR__ . '/../templates/consumer/home.php';
+    if (file_exists($viewPath)) {
+        include $viewPath;
+    } else {
+        // Fallback si el template no existe
+        error_log("Template not found: {$viewPath}");
+        http_response_code(500);
+        echo "Error: Template de onboarding no encontrado";
+    }
 }
 
-// Handler para /catalogo (placeholder por ahora)
 function consumer_catalog() {
-    // Verificar autenticación
-    if (empty($_SESSION['user_id'])) {
-        redirect('/registro.php');
-    }
+    if (empty($_SESSION['user_id'])) { redirect('/registro.php'); }
     
-    // Placeholder: redirigir a registro por ahora o mostrar mensaje
+    // Placeholder temporal
     echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Catálogo - SaborYa</title>';
     echo '<link rel="stylesheet" href="/assets/css/styles.css"></head><body>';
     echo '<div class="app-container"><div class="card auth-card" style="margin-top:20px">';
     echo '<h2>🍕 Catálogo en construcción</h2>';
     echo '<p style="color:var(--color-text-secondary);margin:16px 0">';
     echo 'Estamos preparando los mejores platos para ti.<br>';
-    echo 'Mientras tanto, puedes completar tu perfil o explorar otras secciones.';
+    echo 'Mientras tanto, puedes completar tu perfil.';
     echo '</p>';
-    echo '<div style="display:flex;gap:10px;flex-wrap:wrap">';
-    echo '<a href="/home" class="btn btn-primary" style="flex:1">⚙️ Mi Perfil</a>';
-    echo '<a href="/registro.php" class="btn" style="flex:1;background:rgba(255,255,255,0.1)">🔙 Volver</a>';
-    echo '</div></div></div></body></html>';
+    echo '<a href="/home" class="btn btn-primary btn-block">⚙️ Mi Perfil</a>';
+    echo '</div></div></body></html>';
 }
 
-// Handler para /carrito (placeholder)
 function consumer_cart() {
     if (empty($_SESSION['user_id'])) { redirect('/registro.php'); }
-    // Placeholder similar a catalogo
     echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Carrito - SaborYa</title>';
     echo '<link rel="stylesheet" href="/assets/css/styles.css"></head><body>';
     echo '<div class="app-container"><div class="card auth-card" style="margin-top:20px">';
@@ -80,7 +77,6 @@ function consumer_cart() {
     echo '</div></div></body></html>';
 }
 
-// Handler para /historial (placeholder)
 function consumer_history() {
     if (empty($_SESSION['user_id'])) { redirect('/registro.php'); }
     echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Historial - SaborYa</title>';
@@ -94,10 +90,49 @@ function consumer_history() {
     echo '</div></div></body></html>';
 }
 
+// ============================================
+// ✅ HANDLERS DE ADMIN (placeholders)
+// ============================================
+
+function admin_dashboard() {
+    if (empty($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'admin') {
+        redirect('/login.php?error=unauthorized');
+    }
+    echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Admin - SaborYa</title>';
+    echo '<link rel="stylesheet" href="/assets/css/styles.css"></head><body>';
+    echo '<div class="app-container"><div class="card auth-card" style="margin-top:20px">';
+    echo '<h2>👨‍🍳 Panel de Administración</h2>';
+    echo '<p style="color:var(--color-text-secondary);margin:16px 0">';
+    echo 'Bienvenido, administrador.<br>Funcionalidades en desarrollo.';
+    echo '</p>';
+    echo '<a href="/home" class="btn btn-primary btn-block">🔙 Volver al inicio</a>';
+    echo '</div></div></body></html>';
+}
+
+function admin_kds_monitor() {
+    // Placeholder para Kitchen Display System
+    consumer_catalog(); // Reutilizar placeholder por ahora
+}
+
+function admin_products() {
+    consumer_catalog(); // Placeholder
+}
+
+function admin_send_campaign() {
+    http_response_code(501);
+    echo json_encode(['error' => 'Not implemented']);
+}
+
+// ============================================
+// ✅ ROUTER PRINCIPAL (después de definir handlers)
+// ============================================
+
+$requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$method = $_SERVER['REQUEST_METHOD'];
+
 // ✅ ============================================
 // ✅ FIX: Redirección para ruta raíz "/"
 // ✅ ============================================
-$requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 error_log("INDEX_DEBUG: Request path resolved to: {$requestUri}");
 
 if ($requestUri === '/' || $requestUri === '/index.php') {

@@ -56,6 +56,7 @@ try {
             notify_email = ?,
             notify_whatsapp = ?,
             notify_push = ?,
+            profile_completed = 1,
             updated_at = NOW()
         WHERE id = ? AND verified_at IS NOT NULL
     ");
@@ -71,14 +72,13 @@ try {
     ]);
     
     if ($stmt->rowCount() === 0) {
-        // Usuario no encontrado o no verificado
         error_log("Complete profile: No rows updated for user_id={$userId}");
         http_response_code(400);
         echo json_encode(['error' => 'No se pudo actualizar el perfil']);
         exit;
     }
     
-    // Actualizar sesión con nuevos datos
+    // Actualizar sesión
     $_SESSION['profile_completed'] = true;
     
     // Log de auditoría
