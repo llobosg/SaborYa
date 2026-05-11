@@ -424,3 +424,71 @@ input:-webkit-autofill:focus {
     -webkit-box-shadow: 0 0 0 1000px rgba(15, 23, 42, 0.5) inset;
     transition: background-color 5000s ease-in-out 0s;
 }
+/* Admin Invite Modal Styles */
+.sub-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 480px;
+    max-height: 90vh;
+    background: var(--color-surface);
+    border-radius: 16px;
+    border: 1px solid var(--color-border);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    z-index: 300;
+    display: flex;
+    flex-direction: column;
+    animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+    from { opacity: 0; transform: translate(-50%, -60%); }
+    to { opacity: 1; transform: translate(-50%, -50%); }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--color-border);
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.icon-btn-home {
+    background: rgba(255,255,255,0.1);
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    color: var(--color-text-primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.icon-btn-home:hover { background: rgba(255,255,255,0.2); }
+
+.modal-content-scroll {
+    padding: 20px;
+    overflow-y: auto;
+    max-height: calc(90vh - 60px);
+}
+
+/* Overlay para el modal */
+.sub-modal.hidden { display: none !important; }
+
+/* Responsive para móvil */
+@media (max-width: 768px) {
+    .sub-modal {
+        width: 95%;
+        max-width: 100%;
+        top: 20px;
+        transform: translateX(-50%);
+    }
+}

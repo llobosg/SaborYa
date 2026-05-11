@@ -99,7 +99,7 @@ $userName = $_SESSION['user_name'] ?? 'Admin';
                 <div style="display:flex;gap:12px;flex-wrap:wrap">
                     <a href="/admin/productos?new=1" class="btn btn-primary">➕ Nuevo Producto</a>
                     <a href="#" class="btn" onclick="alert('Próximamente: Ver pedidos')">📦 Ver Pedidos</a>
-                    <a href="#" class="btn" onclick="alert('Próximamente: Invitar admin')">👥 Invitar Admin</a>
+                    <a href="#" class="btn" onclick="openInviteModal(); return false;">👥 Invitar Admin</a>
                 </div>
             </div>
             
@@ -110,5 +110,6 @@ $userName = $_SESSION['user_name'] ?? 'Admin';
             </div>
         </main>
     </div>
+    <?php include __DIR__ . '/../components/admin-invite-modal.php'; ?>
 </body>
 </html>
