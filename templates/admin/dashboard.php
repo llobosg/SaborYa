@@ -25,6 +25,25 @@ $userName = $_SESSION['user_name'] ?? 'Admin';
         .stat-label { color: var(--color-text-secondary); font-size: 0.9rem; }
         .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
         @media (max-width: 768px) { .admin-layout { flex-direction: column; } .admin-sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding: 12px; } }
+        /* Fix: Toasts centrados y completos dentro del modal de invitación */
+        #invite-result .toast {
+            position: static !important;
+            transform: none !important;
+            width: 100%;
+            max-width: 100%;
+            margin: 0 0 10px 0;
+            box-sizing: border-box;
+            text-align: center;
+            justify-content: center;
+            padding: 12px 16px;
+            border-radius: 8px;
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+        #invite-result .toast span:last-child {
+            display: block;
+            width: 100%;
+        }
     </style>
 </head>
 <body>

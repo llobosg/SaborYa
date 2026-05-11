@@ -1,173 +1,120 @@
 <?php
-// templates/components/admin-invite-modal.php - Modal para invitar nuevos admins
-?>
-<div id="invite-admin-modal" class="sub-modal hidden" style="z-index:300">
-    <div class="modal-header">
-        <span>👥 Invitar Administrador</span>
-        <button class="icon-btn-home" onclick="closeInviteModal()">✕</button>
-    </div>
-    <div class="modal-content-scroll">
-        <form id="invite-admin-form" onsubmit="sendInvite(event)" novalidate>
-            <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
-            
-            <div class="input-group">
-                <label for="invite-name">Nombre completo</label>
-                <input type="text" id="invite-name" name="name" required 
-                       placeholder="Ej: María González" class="input-field" maxlength="100">
-            </div>
-            
-            <div class="input-group">
-                <label for="invite-email">Correo electrónico *</label>
-                <input type="email" id="invite-email" name="email" required 
-                       placeholder="nuevo@saborya.app" class="input-field">
-                <small class="input-help">Recibirá un email con enlace para activar su cuenta</small>
-            </div>
-            
-            <div class="input-group">
-                <label for="invite-role">Rol</label>
-                <select id="invite-role" name="role" class="input-field">
-                    <option value="admin">Administrador (acceso completo)</option>
-                    <option value="supervisor">Supervisor (solo lectura + pedidos)</option>
-                </select>
-                <small class="input-help">Los supervisores no pueden crear/eliminar productos</small>
-            </div>
-            
-            <div style="background:rgba(255,107,53,0.1);border:1px solid rgba(255,107,53,0.3);border-radius:8px;padding:12px;margin:16px 0">
-                <small style="color:var(--color-text-secondary)">
-                    🔐 El enlace de invitación expira en <strong>24 horas</strong><br>
-                    📧 El destinatario deberá establecer su contraseña al aceptar
-                </small>
-            </div>
-            
-            <button type="submit" class="btn btn-primary btn-block" id="invite-btn">
-                <span class="btn-text">Enviar invitación ✉️</span>
-                <span class="btn-loading" style="display:none">
-                    <span class="spinner"></span> Enviando...
-                </span>
-            </button>
-        </form>
-        
-        <div id="invite-result" class="toast-container" style="position:static;margin-top:16px"></div>
-    </div>
-</div>
+// public/api/admin/invite.php - Versión robusta con manejo de errores
+header('Content-Type: application/json');
 
-<script>
-// ===== Modal Controls =====
-window.openInviteModal = function() {
-    document.getElementById('invite-admin-modal')?.classList.remove('hidden');
-    document.getElementById('invite-name')?.focus();
-};
-
-window.closeInviteModal = function() {
-    const modal = document.getElementById('invite-admin-modal');
-    if (modal) modal.classList.add('hidden');
-    // Reset form
-    const form = document.getElementById('invite-admin-form');
-    if (form) {
-        form.reset();
-        document.getElementById('invite-result').innerHTML = '';
+try {
+    // 1. Cargar configuración con ruta absoluta
+    $configPath = realpath(__DIR__ . '/../../../config/config.php');
+    if (!$configPath || !file_exists($configPath)) {
+        throw new Exception('Config file not found at: ' . __DIR__ . '/../../../config/config.php');
     }
-};
+    require_once $configPath;
 
-// Close on escape key
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeInviteModal();
-});
-
-// Close on backdrop click
-document.getElementById('invite-admin-modal')?.addEventListener('click', (e) => {
-    if (e.target.id === 'invite-admin-modal') closeInviteModal();
-});
-
-// ===== Send Invite API =====
-window.sendInvite = async function(e) {
-    e.preventDefault();
-    
-    const form = e.target;
-    const email = document.getElementById('invite-email')?.value.trim();
-    const name = document.getElementById('invite-name')?.value.trim();
-    const role = document.getElementById('invite-role')?.value;
-    const csrfToken = form.querySelector('[name="csrf_token"]')?.value;
-    const btn = document.getElementById('invite-btn');
-    const resultDiv = document.getElementById('invite-result');
-    
-    // Validations
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        showInviteResult('Ingresa un email válido 📧', 'error');
-        return;
+    // 2. Cargar BrevoMailer explícitamente (evita "Class not found" fatal error)
+    $brevoPath = realpath(__DIR__ . '/../../../src/Utils/BrevoMailer.php');
+    if ($brevoPath && file_exists($brevoPath)) {
+        require_once $brevoPath;
     }
-    
-    // Loading state
-    btn.disabled = true;
-    btn.querySelector('.btn-text').style.display = 'none';
-    btn.querySelector('.btn-loading').style.display = 'inline-flex';
-    resultDiv.innerHTML = '';
-    
+
+    // 3. Validar método
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405); echo json_encode(['error' => 'Method not allowed']); exit;
+    }
+
+    // 4. Validar autenticación admin
+    if (empty($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'admin') {
+        http_response_code(403); echo json_encode(['error' => 'Unauthorized']); exit;
+    }
+
+    // 5. Parsear JSON
+    $rawInput = file_get_contents('php://input');
+    $input = json_decode($rawInput, true);
+    if (!$input || json_last_error() !== JSON_ERROR_NONE) {
+        http_response_code(400); echo json_encode(['error' => 'Invalid JSON payload']); exit;
+    }
+
+    // 6. CSRF
+    $csrfToken = $input['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+    if (!function_exists('verify_csrf') || !verify_csrf($csrfToken)) {
+        http_response_code(403); echo json_encode(['error' => 'CSRF token invalid']); exit;
+    }
+
+    // 7. Validar inputs
+    $email = filter_var(trim($input['email'] ?? ''), FILTER_VALIDATE_EMAIL);
+    $name = sanitize_input($input['name'] ?? '') ?: explode('@', $email)[0];
+    $role = in_array($input['role'] ?? '', ['admin', 'supervisor']) ? $input['role'] : 'admin';
+
+    if (!$email) {
+        http_response_code(400); echo json_encode(['error' => 'Email inválido']); exit;
+    }
+
+    // 8. Lógica DB
+    $pdo = getPDO();
+    $stmt = $pdo->prepare("SELECT id, role FROM users WHERE email = ?");
+    $stmt->execute([$email]);
+    $existing = $stmt->fetch();
+
+    if ($existing && $existing['role'] === 'admin') {
+        echo json_encode(['error' => 'Este email ya tiene acceso de administrador']); exit;
+    }
+
+    if ($existing) {
+        $pdo->prepare("UPDATE users SET role = ?, is_active = 0 WHERE id = ?")->execute([$role, $existing['id']]);
+        $userId = $existing['id'];
+    } else {
+        $stmt = $pdo->prepare("INSERT INTO users (name, email, role, is_active, password_hash) VALUES (?, ?, ?, 0, '')");
+        $stmt->execute([$name, $email, $role]);
+        $userId = $pdo->lastInsertId();
+    }
+
+    // 9. Generar token único + expiración
+    $token = bin2hex(random_bytes(32));
+    $expires = date('Y-m-d H:i:s', strtotime('+24 hours'));
+    $pdo->prepare("UPDATE users SET invite_token = ?, invite_expires_at = ? WHERE id = ?")
+        ->execute([$token, $expires, $userId]);
+
+    // 10. Enviar email (Brevo) - Con fallback si falla
+    $inviteLink = APP_URL . "/admin/accept-invite.php?token={$token}";
+    $emailSent = false;
+    $emailError = '';
+
+    if (class_exists('\Saborya\Utils\BrevoMailer')) {
+        try {
+            $mailer = new \Saborya\Utils\BrevoMailer();
+            $subject = 'Invitación a administrar SaborYa 🍽️';
+            $body = "<p>Hola {$name},</p><p>Activa tu cuenta de administrador aquí: <a href='{$inviteLink}'>Enlace de activación</a></p><p>Expira en 24h.</p>";
+            $emailSent = $mailer->sendTransactional($email, $subject, $body);
+        } catch (Exception $e) {
+            $emailError = $e->getMessage();
+            error_log("Brevo send failed for {$email}: " . $emailError);
+        }
+    } else {
+        error_log("BrevoMailer class not loaded. Invite created but email not sent.");
+    }
+
+    // 11. Log de auditoría
     try {
-        const response = await fetch('/api/admin/invite.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-Token': csrfToken
-            },
-            credentials: 'include',
-            body: JSON.stringify({ email, name, role, csrf_token: csrfToken })
-        });
-        
-        const data = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(data.error || 'Error al enviar invitación');
-        }
-        
-        // Success
-       if (navigator.clipboard && data.invite_link) {
-            navigator.clipboard.writeText(data.invite_link).then(() => {
-                showInviteResult('✅ Invitación enviada + enlace copiado al portapapeles 📋', 'success');
-            }).catch(() => {
-                // Fallback si no hay permisos de clipboard
-                showInviteResult(`✅ Invitación enviada a ${data.email}`, 'success');
-            });
-        }
-        form.reset();
-        
-        // Auto-close after 3 seconds
-        setTimeout(() => {
-            closeInviteModal();
-            // Optional: show global toast
-            if (window.showToast) {
-                showToast('Invitación de admin enviada ✉️', 'success');
-            }
-        }, 3000);
-        
-    } catch (error) {
-        console.error('Invite error:', error);
-        showInviteResult(error.message || 'Error de conexión', 'error');
-    } finally {
-        btn.disabled = false;
-        btn.querySelector('.btn-text').style.display = 'inline';
-        btn.querySelector('.btn-loading').style.display = 'none';
-    }
-};
+        $stmt = $pdo->prepare("INSERT INTO audit_logs (user_id, action, table_name, record_id, ip_address) VALUES (?, ?, ?, ?, ?)");
+        $stmt->execute([$_SESSION['user_id'], 'admin_invite_sent', 'users', $userId, $_SERVER['REMOTE_ADDR'] ?? '']);
+    } catch (Exception $e) { /* No fallar si el log falla */ }
 
-function showInviteResult(message, type = 'info') {
-    const container = document.getElementById('invite-result');
-    if (!container) return;
+    // 12. Respuesta exitosa
+    $maskedEmail = substr($email, 0, 1) . '***@' . explode('@', $email)[1];
+    echo json_encode([
+        'success' => true,
+        'message' => $emailSent ? 'Invitación enviada correctamente' : 'Invitación creada (revisa logs si el email no llegó)',
+        'email' => $maskedEmail,
+        'expires_in' => '24 horas',
+        'debug' => APP_ENV === 'development' ? ['email_sent' => $emailSent, 'error' => $emailError] : null
+    ]);
+
+} catch (Exception $e) {
+    // Log detallado para Railway
+    error_log("Admin Invite API CRASH: " . $e->getMessage() . " | File: " . $e->getFile() . " | Line: " . $e->getLine());
     
-    const toast = document.createElement('div');
-    toast.className = `toast toast--${type}`;
-    const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
-    toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
-    
-    container.innerHTML = '';
-    container.appendChild(toast);
-    
-    // Auto-remove after 5 seconds for errors
-    if (type !== 'success') {
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            setTimeout(() => toast.remove(), 300);
-        }, 5000);
-    }
+    http_response_code(500);
+    echo json_encode([
+        'error' => 'Error interno al procesar invitación',
+        'details' => APP_ENV === 'development' ? $e->getMessage() : null
+    ]);
 }
-</script>
