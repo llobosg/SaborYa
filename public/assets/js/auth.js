@@ -108,13 +108,30 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) {
                 throw new Error(data.error || data.message || 'Código inválido');
             }
-            
+
             showToast('¡Bienvenido a SaborYa! 🍕✨', 'success');
-            
-            // Redirect con breve delay para mostrar toast
+
+            // ✅ Redirección inmediata + fallback
+            const redirectUrl = data.redirect || '/home';
+            error_log_debug(`Redirecting to: ${redirectUrl}`); // Opcional: función de log
+
+            // Método 1: Redirect inmediato
+            window.location.href = redirectUrl;
+
+            // Método 2: Fallback con setTimeout por si el primero falla
             setTimeout(() => {
-                window.location.href = data.redirect || '/home';
-            }, 1500);
+                if (window.location.href.indexOf(redirectUrl) === -1) {
+                    console.log('Fallback redirect to', redirectUrl);
+                    window.location.replace(redirectUrl); // replace evita que el usuario pueda volver atrás
+                }
+            }, 2000);
+
+            // Método 3: Prevenir re-submit del formulario
+            const form = document.getElementById('step2-form');
+            if (form) {
+                form.style.pointerEvents = 'none'; // Deshabilitar clicks
+                form.style.opacity = '0.7'; // Feedback visual
+            }
             
         } catch (error) {
             console.error('Verify code error:', error);

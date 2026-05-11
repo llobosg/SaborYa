@@ -27,6 +27,73 @@ if (!file_exists($configPath)) {
 error_log("INDEX_DEBUG: Config loaded from {$configPath}");
 require_once $configPath;
 
+// Después de cargar config.php, antes del enrutador principal:
+
+// ============================================
+// ✅ RUTAS DE CONSUMIDOR - HANDLERS SIMPLES
+// ============================================
+
+// Handler para /home (onboarding o redirect)
+function consumer_home() {
+    // Si ya completó el perfil, redirect a catálogo
+    if (!empty($_SESSION['profile_completed'])) {
+        redirect('/catalogo');
+    }
+    // Si no, mostrar onboarding
+    include __DIR__ . '/../templates/consumer/home.php';
+}
+
+// Handler para /catalogo (placeholder por ahora)
+function consumer_catalog() {
+    // Verificar autenticación
+    if (empty($_SESSION['user_id'])) {
+        redirect('/registro.php');
+    }
+    
+    // Placeholder: redirigir a registro por ahora o mostrar mensaje
+    echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Catálogo - SaborYa</title>';
+    echo '<link rel="stylesheet" href="/assets/css/styles.css"></head><body>';
+    echo '<div class="app-container"><div class="card auth-card" style="margin-top:20px">';
+    echo '<h2>🍕 Catálogo en construcción</h2>';
+    echo '<p style="color:var(--color-text-secondary);margin:16px 0">';
+    echo 'Estamos preparando los mejores platos para ti.<br>';
+    echo 'Mientras tanto, puedes completar tu perfil o explorar otras secciones.';
+    echo '</p>';
+    echo '<div style="display:flex;gap:10px;flex-wrap:wrap">';
+    echo '<a href="/home" class="btn btn-primary" style="flex:1">⚙️ Mi Perfil</a>';
+    echo '<a href="/registro.php" class="btn" style="flex:1;background:rgba(255,255,255,0.1)">🔙 Volver</a>';
+    echo '</div></div></div></body></html>';
+}
+
+// Handler para /carrito (placeholder)
+function consumer_cart() {
+    if (empty($_SESSION['user_id'])) { redirect('/registro.php'); }
+    // Placeholder similar a catalogo
+    echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Carrito - SaborYa</title>';
+    echo '<link rel="stylesheet" href="/assets/css/styles.css"></head><body>';
+    echo '<div class="app-container"><div class="card auth-card" style="margin-top:20px">';
+    echo '<h2>🛒 Carrito vacío</h2>';
+    echo '<p style="color:var(--color-text-secondary);margin:16px 0">';
+    echo 'Aún no has agregado productos.<br>¡Explora el catálogo para comenzar!';
+    echo '</p>';
+    echo '<a href="/catalogo" class="btn btn-primary btn-block">Ver catálogo 🍕</a>';
+    echo '</div></div></body></html>';
+}
+
+// Handler para /historial (placeholder)
+function consumer_history() {
+    if (empty($_SESSION['user_id'])) { redirect('/registro.php'); }
+    echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Historial - SaborYa</title>';
+    echo '<link rel="stylesheet" href="/assets/css/styles.css"></head><body>';
+    echo '<div class="app-container"><div class="card auth-card" style="margin-top:20px">';
+    echo '<h2>📜 Historial de pedidos</h2>';
+    echo '<p style="color:var(--color-text-secondary);margin:16px 0">';
+    echo 'Aquí verás tus pedidos anteriores.<br>¡Aún no has realizado tu primera compra!';
+    echo '</p>';
+    echo '<a href="/catalogo" class="btn btn-primary btn-block">Hacer mi primer pedido 🎉</a>';
+    echo '</div></div></body></html>';
+}
+
 // ✅ ============================================
 // ✅ FIX: Redirección para ruta raíz "/"
 // ✅ ============================================
