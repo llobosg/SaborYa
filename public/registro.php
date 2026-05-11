@@ -114,6 +114,6 @@ if (!empty($_SESSION['user_id'])) {
         
     </div>
 
-    <script src="/assets/js/auth.js"></script>
+    <script src="/assets/js/auth.js?v=<?= filemtime(__DIR__ . '/assets/js/auth.js') ?>"></script>
 </body>
 </html>
