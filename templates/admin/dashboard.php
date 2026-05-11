@@ -129,6 +129,14 @@ $userName = $_SESSION['user_name'] ?? 'Admin';
             </div>
         </main>
     </div>
-    <?php include __DIR__ . '/../components/admin-invite-modal.php'; ?>
+    <!-- ✅ INCLUSIÓN DEL MODAL (Usa __DIR__ para ruta segura) -->
+    <?php 
+    $modalPath = __DIR__ . '/../components/admin-invite-modal.php';
+    if (file_exists($modalPath)) {
+        include $modalPath;
+    } else {
+        echo "<!-- ERROR: Modal no encontrado en {$modalPath} -->";
+    }
+    ?>
 </body>
 </html>

@@ -1,6 +1,11 @@
 <?php
-// public/api/admin/invite.php - Versión robusta con manejo de errores
-header('Content-Type: application/json');
+// 🔒 Bloquear cualquier acceso que no sea POST
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    header('Content-Type: application/json');
+    echo json_encode(['error' => 'Method not allowed. Use POST.']);
+    exit;
+}
 
 try {
     // 1. Cargar configuración con ruta absoluta
