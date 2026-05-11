@@ -4,11 +4,7 @@
 
 require_once __DIR__ . '/../config/config.php';
 
-// Protección: solo permitir en desarrollo o desde localhost
-if (APP_ENV === 'production' && !in_array($_SERVER['REMOTE_ADDR'] ?? '', ['127.0.0.1', '::1'])) {
-    http_response_code(403);
-    exit("Acceso denegado. Este script es solo para migración inicial.");
-}
+
 
 header('Content-Type: text/plain; charset=utf-8');
 echo "🚀 Iniciando migración de tabla users...\n\n";
