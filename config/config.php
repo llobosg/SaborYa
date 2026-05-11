@@ -124,12 +124,21 @@ function getPDO() {
             "mysql:host=%s;port=%s;dbname=%s;charset=%s",
             DB_HOST, DB_PORT, DB_NAME, DB_CHARSET
         );
+        // ✅ DESPUÉS (correcto - 3 opciones válidas):
+
+        // Opción A: Concatenación con punto (recomendada)
         $options = [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_EMULATE_PREPARES => false,
-            PDO::MYSQL_ATTR_INIT_COMMAND => "SET time_zone = '"+APP_TIMEZONE+"'"
+            PDO::MYSQL_ATTR_INIT_COMMAND => "SET time_zone = '" . APP_TIMEZONE . "'"
         ];
+
+        // Opción B: sprintf (más legible para múltiples variables)
+        // PDO::MYSQL_ATTR_INIT_COMMAND => sprintf("SET time_zone = '%s'", APP_TIMEZONE)
+
+        // Opción C: Doble comillas con variable (solo si APP_TIMEZONE fuera variable, no constante)
+        // No aplica aquí porque APP_TIMEZONE es una constante definida con define()
         $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
     }
     return $pdo;
