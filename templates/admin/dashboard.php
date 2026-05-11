@@ -131,14 +131,19 @@ $userName = $_SESSION['user_name'] ?? 'Admin';
         </main>
     </div> <!-- Fin admin-layout -->
 
-    <!-- ✅ INCLUSIÓN DEL MODAL (ANTES de </body>, ruta segura con verificación) -->
+   <!-- ✅ DEBUG: Incluir modal con verificación detallada -->
     <?php 
     $modalPath = __DIR__ . '/../components/admin-invite-modal.php';
+    error_log("DASHBOARD_DEBUG: Looking for modal at: {$modalPath}");
+    
     if (file_exists($modalPath)) {
+        error_log("DASHBOARD_DEBUG: Modal file EXISTS, including...");
         include $modalPath;
+        error_log("DASHBOARD_DEBUG: Modal include COMPLETED");
     } else {
-        // Fallback: incluir código inline si el archivo no existe (para debug)
-        echo '<script>console.warn("⚠️ Modal file not found: ' . $modalPath . '");</script>';
+        error_log("DASHBOARD_DEBUG: Modal file NOT FOUND at {$modalPath}");
+        echo '<script>console.error("❌ Modal file not found: ' . addslashes($modalPath) . '");</script>';
+        echo '<div style="background:#ef4444;color:white;padding:12px;border-radius:8px;margin:16px">⚠️ Modal no encontrado: ' . h($modalPath) . '</div>';
     }
     ?>
 
