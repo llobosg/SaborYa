@@ -39,7 +39,7 @@ if (!empty($_SESSION['user_id'])) {
                 <span class="logo-icon">🍽️</span>
                 <h1>SaborYa</h1>
             </div>
-            <p class="logo-subtitle">Alimentos preparados, delivered con amor</p>
+            <p class="logo-subtitle">Sabor de hogar, delivered con amor</p>
         </div>
 
         <!-- Paso 1: Ingresar Email -->
@@ -79,6 +79,13 @@ if (!empty($_SESSION['user_id'])) {
             <form onsubmit="verifyCode(event)" novalidate>
                 <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
                 <input type="hidden" id="verify-email" name="email">
+
+                <div class="input-group">
+                    <label for="name">Tu nombre (opcional)</label>
+                    <input type="text" id="name" name="name" 
+                           placeholder="¿Cómo te llamamos?" maxlength="50"
+                           class="input-field">
+                </div>
                 
                 <div class="input-group">
                     <label for="code">Código de verificación</label>
@@ -86,13 +93,6 @@ if (!empty($_SESSION['user_id'])) {
                            placeholder="000000" maxlength="6"
                            pattern="[0-9]{6}" inputmode="numeric"
                            class="input-field code-input" autocomplete="one-time-code">
-                </div>
-                
-                <div class="input-group">
-                    <label for="name">Tu nombre (opcional)</label>
-                    <input type="text" id="name" name="name" 
-                           placeholder="¿Cómo te llamamos?" maxlength="50"
-                           class="input-field">
                 </div>
                 
                 <button type="submit" class="btn btn-primary btn-block" id="verify-btn">

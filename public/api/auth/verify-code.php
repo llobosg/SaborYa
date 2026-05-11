@@ -104,7 +104,7 @@ if (!$email || strlen($code) !== 6) {
 debugLog("✅ Validación de inputs exitosa");
 
 // ============================================
-// 🪵 LOG 4: Buscar código en cache
+// 🪵 LOG 4: Buscar código en cache (actualizado)
 // ============================================
 $cacheFile = sys_get_temp_dir() . '/saborya_codes/' . md5("code:{$email}");
 
@@ -115,11 +115,40 @@ debugLog("Buscando código en cache", [
 ]);
 
 if (!file_exists($cacheFile)) {
-    debugLog("ERROR: Archivo de código no encontrado", [
+    // 🔍 VERIFICAR SI EL USUARIO YA ESTÁ VERIFICADO (código ya usado)
+    $pdo = getPDO();
+    $stmt = $pdo->prepare("SELECT id, verified_at FROM users WHERE email = ?");
+    $stmt->execute([$email]);
+    $user = $stmt->fetch();
+    
+    if ($user && $user['verified_at']) {
+        debugLog("Usuario ya verificado - redirigiendo", ['email' => maskEmail($email)]);
+        
+        // Iniciar sesión si no está activa
+        if (empty($_SESSION['user_id'])) {
+            session_regenerate_id(true);
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['user_email'] = $email;
+            $_SESSION['user_role'] = 'consumer';
+            $_SESSION['verified'] = true;
+        }
+        
+        // Respuesta exitosa para que el frontend redirija
+        echo json_encode([
+            'success' => true,
+            'message' => 'Ya estás verificado',
+            'redirect' => '/home',
+            'already_verified' => true
+        ]);
+        exit;
+    }
+    
+    // Si no está verificado y no hay código, sí es error real
+    debugLog("ERROR: Código no encontrado y usuario no verificado", [
         'email' => maskEmail($email),
-        'expected_path' => $cacheFile,
-        'temp_dir_contents' => array_slice(scandir(sys_get_temp_dir() . '/saborya_codes' ?? ''), 0, 10)
+        'user_exists' => $user ? 'YES' : 'NO'
     ]);
+    
     http_response_code(400);
     echo json_encode(['error' => 'Código no encontrado o expirado']);
     exit;
